@@ -91,6 +91,8 @@ const char *Q_buildos( void )
 	osname = "OpenBSD";
 #elif defined __EMSCRIPTEN__
 	osname = "emscripten";
+#elif defined _3DS
+	osname = "3DS";
 #else
 #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
 #endif

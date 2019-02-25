@@ -67,6 +67,25 @@ SETUP BACKENDS DEFINITIONS
 		#endif
 	#endif // android case
 
+	#if defined _3DS && !defined XASH_SDL
+
+		#ifndef XASH_VIDEO
+			#define XASH_VIDEO VIDEO_CTR
+		#endif
+
+		#ifndef XASH_TIMER
+			#define XASH_TIMER TIMER_CTR
+		#endif
+
+		#ifndef XASH_INPUT
+			#define XASH_INPUT INPUT_CTR
+		#endif
+
+		#ifndef XASH_SOUND
+			#define XASH_SOUND SOUND_CTR
+		#endif
+	#endif // ctr case
+
 #endif // XASH_DEDICATED
 
 // select crashhandler based on defines

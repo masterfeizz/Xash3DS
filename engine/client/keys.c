@@ -26,6 +26,10 @@ GNU General Public License for more details.
 #include <platform/sdl/events.h>
 #endif
 
+#ifdef _3DS
+#include <platform/ctr/in_ctr.h>
+#endif
+
 typedef struct key_s
 {
 	qboolean		down;
@@ -111,10 +115,17 @@ keyname_t keynames[] =
 {"C_BUTTON", K_C_BUTTON, ""},
 {"Z_BUTTON", K_Z_BUTTON, ""},
 {"AUX16", K_AUX16, ""}, // generic
+#ifdef _3DS
+{"TOUCH_1", K_AUX17, ""},
+{"TOUCH_2", K_AUX18, ""},
+{"TOUCH_3", K_AUX19, ""},
+{"TOUCH_4", K_AUX20, ""},
+#else
 {"AUX17", K_AUX17, ""},
 {"AUX18", K_AUX18, ""},
 {"AUX19", K_AUX19, ""},
 {"AUX20", K_AUX20, ""},
+#endif
 {"AUX21", K_AUX21, ""},
 {"AUX22", K_AUX22, ""},
 {"AUX23", K_AUX23, ""},
@@ -771,6 +782,8 @@ void Key_EnableTextInput( qboolean enable, qboolean force )
 	SDLash_EnableTextInput( enable, force );
 #elif XASH_INPUT == INPUT_ANDROID
 	Android_EnableTextInput( enable, force );
+#elif XASH_INPUT == INPUT_CTR
+	ctr_EnableTextInput( enable, force );
 #endif
 #if 0
 	Joy_EnableTextInput( enable, force );

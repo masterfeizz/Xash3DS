@@ -46,6 +46,8 @@ GNU General Public License for more details.
 #define PAK_LOAD_NO_FILES		5
 #define PAK_LOAD_CORRUPTED		6
 
+#define MAX_FILE_BUF 1024 * 256
+
 typedef struct stringlist_s
 {
 	// maxstrings changes as needed, causing reallocation of strings[] array
@@ -304,7 +306,7 @@ emulate WIN32 FS behaviour when opening local file
 */
 const char *FS_FixFileCase( const char *path )
 {
-#if !defined _WIN32 && !TARGET_OS_IPHONE // assume case insensitive
+#if !defined _WIN32 && !TARGET_OS_IPHONE && !defined(_3DS) // assume case insensitive
 	DIR *dir; struct dirent *entry;
 	char path2[PATH_MAX], *fname;
 
@@ -621,7 +623,7 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 
 	packhandle = open( packfile, O_RDONLY|O_BINARY );
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_3DS)
 	if( packhandle < 0 )
 	{
 		const char *fpackfile = FS_FixFileCase( packfile );
@@ -974,9 +976,10 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 			FS_AddGameDirectory( va( "%s/%s/", host.rodir, dir ), newFlags );
 		}
 
+		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
+
 		if( isGameDir )
 			FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
-		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
 		if( isGameDir )
 			FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	}
@@ -1829,6 +1832,10 @@ void FS_Init( void )
 		fs_caseinsensitive = false;
 #endif
 
+#ifdef _3DS
+	fs_caseinsensitive = false;
+#endif
+
 #ifndef _WIN32
 	if( !fs_caseinsensitive )
 	{
@@ -2064,7 +2071,7 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 
 	file->handle = open( filepath, mod|opt, 0666 );
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_3DS)
 	if( file->handle < 0 )
 	{
 		const char *ffilepath = FS_FixFileCase( filepath );
@@ -2138,7 +2145,7 @@ Look for a file in the filesystem only
 */
 qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive )
 {
-#ifdef _WIN32
+#ifdef _3DS
 	int desc;
 
 	desc = open( path, O_RDONLY|O_BINARY );
@@ -2427,7 +2434,11 @@ file_t *FS_Open( const char *filepath, const char *mode, qboolean gamedironly )
 		char	real_path[MAX_SYSPATH];
 
 		// open the file on disk directly
+		#ifdef _3DS
+		Q_sprintf( real_path, "%s%s", fs_gamedir, filepath ); //3DS doesn't seem to like double slashes
+		#else
 		Q_sprintf( real_path, "%s/%s", fs_gamedir, filepath );
+		#endif
 
 		FS_CreatePath( real_path );// Create directories up to the file
 		return FS_SysOpen( real_path, mode );
@@ -2762,7 +2773,7 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 
 	file = FS_Open( path, "rb", gamedironly );
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_3DS)
 	if( !file )
 	{
 		// Try to open this file with lowered path
@@ -2810,7 +2821,7 @@ byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr )
 
 	file = FS_SysOpen( path, "rb" );
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_3DS)
 	if( !file )
 	{
 		// Try to open this file with lowered path
@@ -2846,7 +2857,7 @@ file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedi
 {
 	file_t	*file = FS_Open( path, "rb", gamedironly );
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_3DS)
 	if( !file )
 		file = FS_Open( FS_ToLowerCase( path ), "rb", gamedironly );
 #endif // _WIN32
@@ -3199,13 +3210,13 @@ FS_FileCopy
 */
 void FS_FileCopy( file_t *pOutput, file_t *pInput, int fileSize )
 {
-	char	buf[MAX_SYSPATH];	// A small buffer for the copy
+	char	buf[MAX_FILE_BUF];	// A small buffer for the copy
 	int	size;
 
 	while( fileSize > 0 )
 	{
-		if( fileSize > MAX_SYSPATH )
-			size = MAX_SYSPATH;
+		if( fileSize > MAX_FILE_BUF )
+			size = MAX_FILE_BUF;
 		else size = fileSize;
 
 		FS_Read( pInput, buf, size );
@@ -3759,7 +3770,7 @@ wfile_t *W_Open( const char *filename, const char *mode )
 	else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
 	else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_3DS)
 	if( wad->handle < 0 )
 	{
 		const char *ffilename = FS_FixFileCase( filename );

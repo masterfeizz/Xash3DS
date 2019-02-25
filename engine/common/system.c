@@ -28,7 +28,9 @@ GNU General Public License for more details.
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#ifndef _3DS
 #include <dlfcn.h>
+#endif
 #ifndef __ANDROID__
 extern char **environ;
 #include <pwd.h>
@@ -86,6 +88,7 @@ double GAME_EXPORT Sys_DoubleTime( void )
 	CurrentTime = SDL_GetPerformanceCounter();
 	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
 }
+
 #elif XASH_TIMER == TIMER_LINUX
 
 double GAME_EXPORT Sys_DoubleTime( void )
@@ -104,6 +107,28 @@ double GAME_EXPORT Sys_DoubleTime( void )
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
 }
+
+#elif XASH_TIMER == TIMER_CTR
+
+#include <3ds.h>
+#define TICKS_PER_SEC 268123480.0
+
+static inline double u64_to_double(u64 value) {
+	return (((double)(u32)(value >> 32))*0x100000000ULL+(u32)value);
+}
+
+double GAME_EXPORT Sys_DoubleTime( void )
+{
+	static u64 initialTick = 0;
+
+	if(!initialTick){
+		initialTick = svcGetSystemTick();
+	}
+
+	u64 delta = svcGetSystemTick() -  initialTick;
+	return u64_to_double(delta)/TICKS_PER_SEC;
+}
+
 #endif
 
 #define DEBUG_BREAK
@@ -278,6 +303,8 @@ void Sys_Sleep( unsigned int msec )
 	Sleep( msec );
 #elif XASH_TIMER == TIMER_LINUX
 	usleep( msec * 1000 );
+#elif XASH_TIMER == TIMER_CTR
+	svcSleepThread( msec * 1000000 );
 #endif
 }
 
@@ -297,8 +324,7 @@ char *Sys_GetCurrentUser( void )
 
 	if( GetUserName( s_userName, &size ))
 		return s_userName;
-
-#elif !defined(__ANDROID__)
+#elif !defined(__ANDROID__) && !defined(_3DS)
 
 	uid_t uid = geteuid();
 	struct passwd *pw = getpwuid( uid );
@@ -680,6 +706,9 @@ void Sys_Error( const char *format, ... )
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't execute more than once
 
+#ifdef _3DS
+	consoleInit(GFX_BOTTOM, NULL);
+#endif
 	// make sure that console received last message
 	if( host.change_game ) Sys_Sleep( 200 );
 
@@ -715,6 +744,11 @@ void Sys_Error( const char *format, ... )
 #endif
 		MSGBOX( text );
 	}
+
+#ifdef _3DS
+	while(hidKeysDown() != KEY_START)
+		hidScanInput();
+#endif
 
 	Sys_Quit();
 }

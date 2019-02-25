@@ -21,27 +21,32 @@ GNU General Public License for more details.
 #define VIDEO_NULL 0
 #define VIDEO_SDL 1
 #define VIDEO_ANDROID 2
+#define VIDEO_CTR 3
 
 // audio backends (XASH_SOUND)
 #define SOUND_NULL 0
 #define SOUND_SDL 1
 #define SOUND_OPENSLES 2
+#define SOUND_CTR 3
 
 // crash handler (XASH_CRASHHANDLER)
 #define CRASHHANDLER_NULL 0
 #define CRASHHANDLER_UCONTEXT 1
 #define CRASHHANDLER_DBGHELP 2
 #define CRASHHANDLER_WIN32 3
+#define CRASHHANDLER_CTR 4
 
 // input (XASH_INPUT)
 #define INPUT_NULL 0
 #define INPUT_SDL 1
 #define INPUT_ANDROID 2
+#define INPUT_CTR 3
 
 // timer (XASH_TIMER)
 #define TIMER_NULL 0 // not used
 #define TIMER_SDL 1
 #define TIMER_LINUX 2
 #define TIMER_WIN32 3
+#define TIMER_CTR 4
 
 #endif /* BACKENDS_H */

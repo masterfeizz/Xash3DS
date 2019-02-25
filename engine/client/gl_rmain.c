@@ -1271,6 +1271,17 @@ R_RenderFrame
 */
 void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 {
+	#ifdef _3DS
+	// FIXME: "fix" for corrupted lightmap on first load....
+	static qboolean firstFrame = true;
+
+	if(firstFrame)
+	{
+		vid_gamma->modified = true;
+		firstFrame = false;
+	}
+	#endif
+
 	if( r_norefresh->integer )
 		return;
 
@@ -1342,6 +1353,8 @@ void R_EndFrame( void )
 	SDL_GL_SwapWindow( host.hWnd );
 #elif defined __ANDROID__ // For direct android backend
 	Android_SwapBuffers();
+#elif defined _3DS
+	pglSwapBuffers();
 #endif
 }
 

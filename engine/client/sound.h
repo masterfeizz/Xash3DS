@@ -30,7 +30,12 @@ extern byte *sndpool;
 #define SOUND_22k		22050	// 22khz sample rate
 #define SOUND_32k		32000	// 32khz sample rate
 #define SOUND_44k		44100	// 44khz sample rate
+
+#ifdef _3DS
+#define SOUND_DMA_SPEED	SOUND_22k	// hardware playback rate
+#else
 #define SOUND_DMA_SPEED	SOUND_44k	// hardware playback rate
+#endif
 
 #define SND_TRACE_UPDATE_MAX  	2	// max of N channels may be checked for obscured source per frame
 #define SND_RADIUS_MAX		240.0f	// max sound source radius

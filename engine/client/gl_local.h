@@ -29,15 +29,27 @@ GNU General Public License for more details.
 
 extern byte	*r_temppool;
 
-#define BLOCK_SIZE		world.block_size	// lightmap blocksize
-#define BLOCK_SIZE_DEFAULT	128		// for keep backward compatibility
-#define BLOCK_SIZE_MAX	1024
+#ifdef _3DS
+	#define BLOCK_SIZE		world.block_size	// lightmap blocksize
+	#define BLOCK_SIZE_DEFAULT	128		// for keep backward compatibility
+	#define BLOCK_SIZE_MAX	128
 
-#define MAX_TEXTURES	4096
-#define MAX_DETAIL_TEXTURES	256
-#define MAX_LIGHTMAPS	256
-#define SUBDIVIDE_SIZE	64
-#define MAX_MIRRORS		32	// per one frame!
+	#define MAX_TEXTURES	2048
+	#define MAX_DETAIL_TEXTURES	128
+	#define MAX_LIGHTMAPS	128
+	#define SUBDIVIDE_SIZE	64
+	#define MAX_MIRRORS		32	// per one frame!
+#else
+	#define BLOCK_SIZE		world.block_size	// lightmap blocksize
+	#define BLOCK_SIZE_DEFAULT	128		// for keep backward compatibility
+	#define BLOCK_SIZE_MAX	1024
+
+	#define MAX_TEXTURES	4096
+	#define MAX_DETAIL_TEXTURES	256
+	#define MAX_LIGHTMAPS	256
+	#define SUBDIVIDE_SIZE	64
+	#define MAX_MIRRORS		32	// per one frame!
+#endif
 
 #define NUMVERTEXNORMALS	162
 #define SHADEDOT_QUANT 	16	// precalculated dot products for quantized angles

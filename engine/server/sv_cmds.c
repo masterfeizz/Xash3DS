@@ -586,13 +586,16 @@ SV_AutoSave_f
 */
 void SV_AutoSave_f( void )
 {
+	#ifdef _3DS //Slow and causes crashes sometimes on the O3DS
+	#warning FIXME - SV_AutoSave_f
+	#else
 	if( Cmd_Argc() != 1 )
 	{
 		Msg( "Usage: autosave\n" );
 		return;
 	}
-
 	SV_SaveGame( "autosave" );
+	#endif
 }
 
 /*

@@ -912,7 +912,10 @@ void Host_InputFrame( void )
 
 #ifdef USE_EVDEV
 	IN_EvdevFrame();
+#elif _3DS
+	ctr_IN_Frame();
 #endif
+
 	if( clgame.dllFuncs.pfnLookEvent )
 	{
 		int dx, dy;

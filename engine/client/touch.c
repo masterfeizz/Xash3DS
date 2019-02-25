@@ -1408,6 +1408,40 @@ static void Touch_EditMove( touchEventType type, int fingerID, float x, float y,
 
 static void Touch_Motion( touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
+#ifdef _3DS
+	if( touch.precision )
+		dx *= touch_precise_amount->value, dy *= touch_precise_amount->value;
+		
+	if( touch_nonlinear_look->integer )
+	{
+		float dabs, dcos, dsin;
+
+		// save angle, modify only velocity
+		dabs = sqrt( dx * dx + dy * dy );
+
+		if( dabs < 0.000001 )
+			return; // no motion, avoid division by zero
+
+		dcos = dx / dabs;
+		dsin = dy / dabs;
+	
+		if( touch_exp_mult->value > 1 )
+			dabs = ( exp( dabs * touch_exp_mult->value ) - 1 ) / touch_exp_mult->value;
+
+		if( touch_pow_mult->value > 1 && touch_pow_factor->value > 1 )
+			dabs = pow( dabs * touch_pow_mult->value, touch_pow_factor->value ) / touch_pow_mult->value;
+
+		dx = dabs * dcos;
+		dy = dabs * dsin;
+	}
+
+	// prevent breaking engine/client with bad values
+	if( IS_NAN( dx ) || IS_NAN( dy ) )
+		return;
+
+	// accumulate
+	touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
+#else
 	// walk
 	if( fingerID == touch.move_finger )
 	{
@@ -1476,6 +1510,7 @@ static void Touch_Motion( touchEventType type, int fingerID, float x, float y, f
 		// accumulate
 		touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
 	}
+#endif
 }
 
 
@@ -1746,7 +1781,7 @@ static int Touch_ControlsEvent( touchEventType type, int fingerID, float x, floa
 
 int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
-
+#ifndef _3DS
 	// simulate menu mouse click
 	if( cls.key_dest != key_game && !touch_in_menu->integer )
 	{
@@ -1813,7 +1848,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 
 	if( clgame.dllFuncs.pfnTouchEvent && clgame.dllFuncs.pfnTouchEvent( type, fingerID, x, y, dx, dy ) )
 		return true;
-
+#endif //_3DS
 	return Touch_ControlsEvent( type, fingerID, x, y, dx, dy );
 }
 

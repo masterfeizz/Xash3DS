@@ -39,9 +39,14 @@ GNU General Public License for more details.
 
 #if !defined(_WIN32)
 	#include <limits.h>
-	#include <dlfcn.h>
 	#include <stdlib.h>
 	#include <unistd.h>
+
+	#if !defined(_3DS)
+		#include <dlfcn.h>
+	#else
+		#define RTLD_NOW 0
+	#endif
 
 	#if defined(__APPLE__)
 		#include <sys/syslimits.h>
@@ -88,6 +93,10 @@ GNU General Public License for more details.
 		#define CLIENTDLL "libclient" POSTFIX ARCH_SUFFIX "." OS_LIB_EXT
 		#define SERVERDLL "libserver" POSTFIX ARCH_SUFFIX "." OS_LIB_EXT
 		#define PACKAGE   "/Xash3D"
+	#elif defined(_3DS)
+		#define MENUDLL   "menu"
+		#define CLIENTDLL "client"
+		#define SERVERDLL "server"
 	#else
 		#define MENUDLL   "libxashmenu" ARCH_SUFFIX "." OS_LIB_EXT
 		#define CLIENTDLL "client"      ARCH_SUFFIX "." OS_LIB_EXT

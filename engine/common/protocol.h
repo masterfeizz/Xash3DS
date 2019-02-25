@@ -110,11 +110,15 @@ GNU General Public License for more details.
 #define MAX_EDICTS			(1<<MAX_ENTITY_BITS)// 12 bits = 4096 edicts
 
 #define MAX_CUSTOM			1024	// max custom resources per level
-#define MAX_USER_MESSAGES		191	// another 63 messages reserved for engine routines
+#define MAX_USER_MESSAGES	191	// another 63 messages reserved for engine routines
 #define MAX_DLIGHTS			32	// dynamic lights (rendered per one frame)
 #define MAX_ELIGHTS			64	// entity only point lights
 #define MAX_LIGHTSTYLES		256	// a byte limit, don't modify
-#define MAX_RENDER_DECALS		4096	// max rendering decals per a level
+#ifdef _3DS
+#define MAX_RENDER_DECALS	1024	// max rendering decals per a level
+#else
+#define MAX_RENDER_DECALS	4096	// max rendering decals per a level
+#endif
 
 // sound flags
 #define SND_VOLUME			(1<<0)	// a scaled byte
@@ -124,7 +128,7 @@ GNU General Public License for more details.
 #define SND_SENTENCE		(1<<4)	// set if sound num is actually a sentence num
 #define SND_STOP			(1<<5)	// stop the sound
 #define SND_CHANGE_VOL		(1<<6)	// change sound vol
-#define SND_CHANGE_PITCH		(1<<7)	// change sound pitch
+#define SND_CHANGE_PITCH	(1<<7)	// change sound pitch
 #define SND_SPAWNING		(1<<8)	// we're spawning, used in some cases for ambients (not sent across network)
 
 // decal flags

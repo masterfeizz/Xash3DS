@@ -93,9 +93,12 @@ int dladdr( const void *addr, Dl_info *info )
 	return 0;
 }
 
-
-
 #endif
+
+#ifdef _3DS
+#include "platform/ctr/dll_ctr.h"
+#endif
+
 #ifdef XASH_SDL
 #include <SDL_filesystem.h>
 #endif

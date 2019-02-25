@@ -446,8 +446,10 @@ void Joy_Init( void )
 	Cvar_SetFloat( "joy_found", SDLash_JoyInit( joy_index->integer ) );
 #elif defined(ANDROID)
 	// Initalized after first Joy_AddEvent
+#elif defined(_3DS)
+	Cvar_SetFloat( "joy_found", 1 );
 #else
-#warning "Any platform must implement platform-dependent JoyInit, start event system. Otherwise no joystick support"
+	#warning "Any platform must implement platform-dependent JoyInit, start event system. Otherwise no joystick support"
 #endif
 
 	if( joy_found->integer > 0 )

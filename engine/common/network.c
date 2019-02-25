@@ -13,6 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifdef _3DS
+#include <3ds.h>
+#endif
+
 #ifdef _WIN32
 // Winsock
 #include <winsock.h>
@@ -135,6 +139,7 @@ void NET_FreeWinSock( void )
 	Sys_FreeLibrary( &winsock_dll );
 }
 #else
+
 #define SOCKET_ERROR -1
 #define pHtons htons
 #define pConnect connect
@@ -157,6 +162,13 @@ void NET_FreeWinSock( void )
 #define pSelect select
 #define pGetAddrInfo getaddrinfo
 #define SOCKET int
+#endif
+
+#ifdef _3DS
+#define htons __builtin_bswap16
+#define htonl __builtin_bswap32
+#define ntohs __builtin_bswap16
+#define ntohl __builtin_bswap32
 #endif
 
 #ifdef __EMSCRIPTEN__
@@ -213,6 +225,13 @@ void NET_Restart_f( void );
 
 #ifdef _WIN32
 	static WSADATA winsockdata;
+#endif
+
+#ifdef _3DS
+	#define SOC_BUFFERSIZE  0x180000
+	#define SOC_ALIGN       0x1000
+
+	static uint32_t *SOC_buffer = NULL;
 #endif
 
 #ifdef _WIN32
@@ -1103,7 +1122,7 @@ Never called by the game logic, just the system event queing
 qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *length )
 {
 	int 		ret = SOCKET_ERROR;
-	struct sockaddr	addr;
+	struct sockaddr_storage	addr;
 	socklen_t	addr_len;
 	int		net_socket = 0;
 	int		protocol;
@@ -1130,7 +1149,7 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 
 		if( !net_socket ) continue;
 
-		addr_len = sizeof( addr );
+		addr_len = sizeof( struct sockaddr_storage );
 		ret = pRecvFrom( net_socket, data, NET_MAX_PAYLOAD, 0, (struct sockaddr *)&addr, &addr_len );
 
 		NET_SockadrToNetadr( &addr, from );
@@ -1222,7 +1241,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 
 	NET_NetadrToSockadr( &to, &addr );
 
-	ret = pSendTo( net_socket, data, length, 0, &addr, sizeof( addr ));
+	ret = pSendTo( net_socket, data, length, 0, &addr, sizeof(struct sockaddr_in));
 
 #ifdef _WIN32
 	if (ret == SOCKET_ERROR)
@@ -1290,6 +1309,21 @@ static int NET_IPSocket( const char *netInterface, int port )
 		MsgDev( D_WARN, "NET_UDPSocket: setsockopt SO_BROADCAST = %s\n", NET_ErrorString( ));
 		pCloseSocket( net_socket );
 		return 0;
+	}
+#elif _3DS
+	if(( net_socket = pSocket( PF_INET, SOCK_DGRAM, IPPROTO_UDP )) < 0 )
+	{
+		if( errno != EAFNOSUPPORT )
+			MsgDev( D_WARN, "NET_UDPSocket: socket = %s\n", NET_ErrorString( ));
+		return 0;
+	}
+
+	fcntl(net_socket, F_SETFL, O_NONBLOCK);
+
+	// make it broadcast capable
+	if( pSetSockopt( net_socket, SOL_SOCKET, SO_BROADCAST, (char *)&_true, sizeof( _true )) < 0 )
+	{
+		MsgDev( D_WARN, "NET_UDPSocket: setsockopt SO_BROADCAST = %s\n", NET_ErrorString( ));
 	}
 #else
 	if(( net_socket = pSocket( PF_INET, SOCK_DGRAM, IPPROTO_UDP )) < 0 )
@@ -1655,6 +1689,19 @@ void NET_Init( void )
 		MsgDev( D_WARN, "NET_Init: winsock initialization failed: %d\n", r );
 		return;
 	}
+#elif _3DS
+	SOC_buffer = (uint32_t*)memalign(SOC_ALIGN, SOC_BUFFERSIZE);
+	
+	if(SOC_buffer == NULL)
+		Sys_Error("Failed to allocate SOC_Buffer\n");
+	
+	int res = socInit(SOC_buffer, SOC_BUFFERSIZE);
+	
+	if(res != 0)
+	{
+		free(SOC_buffer);
+		return -1;
+	}
 #endif
 
 	net_showpackets = Cvar_Get( "net_showpackets", "0", 0, "show network packets" );
@@ -1913,7 +1960,7 @@ void HTTP_Run( void )
 	httpfile_t *curfile = http.first_file; // download is single-threaded now, but can be rewrited
 	httpserver_t *server;
 	float frametime;
-	struct sockaddr addr;
+	struct sockaddr_in addr;
 
 	if( !curfile )
 		return;
@@ -1993,7 +2040,7 @@ void HTTP_Run( void )
 	{
 
 
-		res = pConnect( curfile->socket, &addr, sizeof( struct sockaddr ) );
+		res = pConnect( curfile->socket, &addr, sizeof( struct sockaddr_in ) );
 
 		if( res )
 		{

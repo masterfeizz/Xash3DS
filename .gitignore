@@ -3,6 +3,12 @@
 *.so
 *.a
 *.framework
+*.elf
+*.3dsx
+*.cia
+*.smdh
+
+romfs/
 
 # Other
 *.save

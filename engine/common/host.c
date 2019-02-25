@@ -19,6 +19,10 @@ GNU General Public License for more details.
 #include <SDL.h>
 #endif
 
+#if defined(_3DS)
+#include <3ds.h>
+#endif
+
 #include <stdarg.h>  // va_args
 #include <errno.h> // errno
 #include <string.h> // strerror
@@ -265,6 +269,9 @@ void Host_RunFrame()
 
 	if( !oldtime )
 		oldtime = Sys_DoubleTime();
+#ifdef _3DS
+	aptMainLoop();
+#endif
 
 #if XASH_INPUT == INPUT_SDL
 	SDLash_RunEvents();
@@ -1053,6 +1060,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Q_strncpy( host.rootdir, IOS_GetDocsDir(), sizeof( host.rootdir ));
 #elif defined(__SAILFISH__)
 		Q_strncpy( host.rootdir, GAMEPATH, sizeof( host.rootdir ));
+#elif defined(_3DS)
+		Q_strncpy( host.rootdir, "sdmc:/xash3d", sizeof( host.rootdir ));
 #elif defined(XASH_SDL)
 		if( !( baseDir = SDL_GetBasePath() ) )
 			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );
@@ -1070,6 +1079,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	// get readonly root. The order is: check for arg, then env.
 	// If still not got it, rodir is disabled.
 	host.rodir[0] = 0;
+	#ifdef _3DS
+	Q_strncpy( host.rodir, "romfs:/", sizeof( host.rodir ) );
+	#else
 	if( !Sys_GetParmFromCmdLine( "-rodir", host.rodir ) )
 	{
 		char *roDir;
@@ -1079,6 +1091,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 			Q_strncpy( host.rodir, roDir, sizeof( host.rodir ) );
 		}
 	}
+	#endif
 
 	if( !Sys_CheckParm( "-disablehelp" ) )
 	{
@@ -1230,6 +1243,31 @@ void Host_FreeCommon( void )
 
 	Mem_FreePool( &host.mempool );
 }
+
+void recursive_mkdir(const char *dir, const mode_t mode) {
+	char tmp[PATH_MAX];
+	char *p = NULL;
+	size_t len;
+
+	snprintf(tmp, sizeof(tmp),"%s",dir);
+
+	len = strlen(tmp);
+
+	if(tmp[len - 1] == '/')
+		tmp[len - 1] = 0;
+
+	for(p = tmp + 1; *p; p++)
+	{
+		if(*p == '/')
+		{
+			*p = 0;
+			mkdir(tmp, mode);
+			*p = '/';
+		}
+	}
+	mkdir(tmp, S_IRWXU);
+}
+
 /*
 =================
 Host_Main
@@ -1237,6 +1275,31 @@ Host_Main
 */
 int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
 {
+	#ifdef _3DS
+
+	osSetSpeedupEnable(true);
+	APT_SetAppCpuTimeLimit(40);
+
+	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false);
+	gfxSetDoubleBuffering(GFX_BOTTOM, false);
+	gfxSwapBuffersGpu();
+
+	romfsInit();
+
+	recursive_mkdir( "sdmc:/xash3d/valve/save", 0775 ); // crashes without this dir
+
+	pglInit();
+	glLoadIdentity();
+
+	extern int ctr_installdll_mainui( void );
+	ctr_installdll_mainui( );
+	extern int ctr_installdll_server( void );
+	ctr_installdll_server( );
+	extern int ctr_installdll_client( void );
+	ctr_installdll_client( );
+
+	#endif
+
 	pChangeGame = func;	// may be NULL
 
 	host.change_game = bChangeGame;
@@ -1253,7 +1316,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	}
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow usage of cheat commands and variables" );
-	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
+	host_maxfps = Cvar_Get( "fps_max", "60", CVAR_ARCHIVE, "host fps upper limit" );
 	host_sleeptime = Cvar_Get( "sleeptime", "1", CVAR_ARCHIVE, "higher value means lower accuracy" );
 	host_framerate = Cvar_Get( "host_framerate", "0", 0, "locks frame timing to this value in seconds" );  
 	host_serverstate = Cvar_Get( "host_serverstate", "0", CVAR_INIT, "displays current server state" );
@@ -1302,6 +1365,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 #if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined( XASH_DEDICATED )
 	Android_Init();
+#endif
+
+#ifdef _3DS
+	ctr_IN_Init();
 #endif
 
 	HTTP_Init();
