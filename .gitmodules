@@ -1,5 +1,4 @@
-[submodule "hlsdk"]
-	path = hlsdk
-	url = https://github.com/masterfeizz/hlsdk_3ds
-[submodule "mainui"]
-	url = https://github.com/masterfeizz/mainui_3ds
+[submodule "mainui_3ds"]
+	path = mainui_3ds
+	url = https://github.com/masterfeizz/mainui_3ds.git
+	branch = master
