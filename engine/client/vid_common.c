@@ -868,7 +868,7 @@ void GL_InitCommands( void )
 	r_detailtextures = Cvar_Get( "r_detailtextures", "0", CVAR_ARCHIVE, "enable detail textures support, use \"2\" for auto-generate mapname_detail.txt" );
 	r_lockpvs = Cvar_Get( "r_lockpvs", "0", CVAR_CHEAT, "lockpvs area at current point (pvs test)" );
 	r_lockcull = Cvar_Get( "r_lockcull", "0", CVAR_CHEAT, "lock frustrum area at current point (cull test)" );
-	r_dynamic = Cvar_Get( "r_dynamic", "0", CVAR_ARCHIVE, "allow dynamic lighting (dlights, lightstyles)" );
+	r_dynamic = Cvar_Get( "r_dynamic", "1", CVAR_ARCHIVE, "allow dynamic lighting (dlights, lightstyles)" );
 	r_lightmap = Cvar_Get( "r_lightmap", "0", CVAR_CHEAT, "lightmap debugging tool" );
 	r_fastsky = Cvar_Get( "r_fastsky", "1", CVAR_ARCHIVE, "enable algorhytm fo fast sky rendering (for old machines)" );
 	r_drawentities = Cvar_Get( "r_drawentities", "1", CVAR_CHEAT|CVAR_ARCHIVE, "render entities" );
