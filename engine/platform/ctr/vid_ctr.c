@@ -139,10 +139,7 @@ void GL_InitExtensions( void )
 
 	APT_CheckNew3DS(&isN3DS);
 
-	if(isN3DS)
-		glConfig.max_2d_texture_size = 256;
-	else
-		glConfig.max_2d_texture_size = 128;
+	glConfig.max_2d_texture_size = 256;
 
 	Cvar_Get( "gl_max_texture_size", "0", CVAR_INIT, "opengl texture max dims" );
 	Cvar_Set( "gl_max_texture_size", va( "%i", glConfig.max_2d_texture_size ) );
