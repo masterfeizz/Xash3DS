@@ -76,6 +76,11 @@ convar_t 	*cmd_scripting = NULL;
 
 static int num_decals;
 
+#ifdef _3DS
+int __stacksize__ = 2 * 1024 * 1024;
+u32 __ctru_linear_heap_size = 12 * 1024 * 1024;
+#endif
+
 void Sys_PrintUsage( void )
 {
 #define O(x,y) "   "x"  "y"\n"
@@ -1278,7 +1283,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	#ifdef _3DS
 
 	osSetSpeedupEnable(true);
-	APT_SetAppCpuTimeLimit(40);
 
 	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false);
 	gfxSetDoubleBuffering(GFX_BOTTOM, false);
